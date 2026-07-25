@@ -5,7 +5,7 @@ Department of Artificial Intelligence, Amrita Vishwa Vidyapeetam, Coimbatore Cam
 
 Automates the synthesis of an exhaustive, deeply detailed research monograph formatted in official Elsevier Journal style
 (elsarticle 5p times two-column layout suitable for Medical Image Analysis & Computer Methods and Programs in Biomedicine).
-Features precise image alignments, multi-column spanning grids, publication-grade tabular styling, and rigorous clinical explainability mathematics.
+Features precise single-column and balanced 2x2 grid image alignments, publication-grade tabular styling, and rigorous clinical explainability mathematics.
 """
 
 import os
@@ -84,6 +84,7 @@ def build_elsevier_tex_content():
 \usepackage{float}
 \usepackage{array}
 \usepackage{multirow}
+\usepackage{subcaption}
 
 \journal{Medical Image Analysis / Artificial Intelligence in Medicine}
 
@@ -172,24 +173,23 @@ Our empirical framework ingests an extensive curated neuro-oncology MRI reposito
 \item \textbf{No Tumor ($n=500$, 15.3\%):} Confirmed healthy control brains displaying preserved ventricular volume and normal cortical structural symmetry. \textit{Note: This control group functions as a minority class.}
 \end{itemize}
 
-\begin{figure*}[t!]
+Prior to deep neural extraction, a mathematical automated dataset hygiene protocol employing MD5 cryptographic hashing identified and stripped 8 duplicate test scans while converting 7 non-standard single-channel grayscale exports into uniform 3-channel RGB numerical tensors. 
+
+\begin{figure}[t!]
 \centering
-\begin{minipage}{0.48\textwidth}
-\centering
-\includegraphics[width=0.96\linewidth]{figures/image_size_distribution.png}
+\includegraphics[width=0.95\linewidth]{figures/image_size_distribution.png}
 \caption{\textbf{Radiological Spatial Diversity.} Native pixel matrix dimensions and structural aspect ratio dispersion across contributing hospital scanner systems ($\sigma = \pm 84.3$ px), necessitating standardized bicubic interpolation.}
 \label{fig:size_dist}
-\end{minipage}
-\hfill
-\begin{minipage}{0.48\textwidth}
+\end{figure}
+
+\begin{figure}[t!]
 \centering
-\includegraphics[width=0.96\linewidth]{figures/pixel_intensity_histograms.png}
+\includegraphics[width=0.95\linewidth]{figures/pixel_intensity_histograms.png}
 \caption{\textbf{Quantitative Brightness Profiles.} RGB pixel brightness intensity dispersion across diagnostic cohorts demonstrating extensive intra-class overlap caused by variable clinical Gadolinium dosing protocols.}
 \label{fig:hist_dist}
-\end{minipage}
-\end{figure*}
+\end{figure}
 
-Prior to deep neural extraction, a mathematical automated dataset hygiene protocol employing MD5 cryptographic hashing identified and stripped 8 duplicate test scans while converting 7 non-standard single-channel grayscale exports into uniform 3-channel RGB numerical tensors. As illustrated in Fig.~\ref{fig:size_dist}, native spatial image resolutions across contributing clinical centers varied significantly from compact $60\times 60$ grids to dense $512\times 512$ arrays ($\sigma = \pm 84.3$ px), confirming our design requirement for rigorous spatial standardizing protocols. Furthermore, initial brightness profile analyses (Fig.~\ref{fig:hist_dist}) revealed extensive intra-class intensity overlapping caused by non-uniform hospital contrast injection protocols and variable scanner magnet strengths, substantiating the need for our biophysically justified preprocessing engine.
+As illustrated in Fig.~\ref{fig:size_dist}, native spatial image resolutions across contributing clinical centers varied significantly from compact $60\times 60$ grids to dense $512\times 512$ arrays ($\sigma = \pm 84.3$ px), confirming our design requirement for rigorous spatial standardizing protocols. Furthermore, initial brightness profile analyses (Fig.~\ref{fig:hist_dist}) revealed extensive intra-class intensity overlapping caused by non-uniform hospital contrast injection protocols and variable scanner magnet strengths, substantiating the need for our biophysically justified preprocessing engine.
 
 \section{Biophysically Justified Preprocessing Mechanics}
 To normalize heterogeneous clinical multi-center imaging data without destroying subtle pathological diagnostic markers, we developed a deterministic 5-stage numerical preprocessing sequence:
@@ -201,6 +201,13 @@ To normalize heterogeneous clinical multi-center imaging data without destroying
 \item \textit{Tensor Standardization:} Precision float32 normalization using ImageNet RGB channel means ($\mu=[0.485, 0.456, 0.406]$) and standard deviations ($\sigma=[0.229, 0.224, 0.225]$).
 \end{enumerate}
 
+\begin{figure*}[t!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/graph_2_clahe.png}
+\caption{\textbf{Biophysical Contrast Normalization.} Side-by-side radiological imaging comparison illustrating uncalibrated native hospital PACS acquisitions (left) versus our targeted CIE LAB L-Channel Adaptive CLAHE enhancement (right), highlighting capillary glioma borders and microvascular contrast without boosting ambient background scanner artifacts.}
+\label{fig:clahe_comparison}
+\end{figure*}
+
 \subsection{Rigorous Engineering \& Clinical Biophysical Justifications}
 
 \textbf{Why Adaptive CLAHE Exclusively in CIE LAB Lightness Space?} Standard global histogram equalization linearly stretches dynamic pixel intensity across an entire scan matrix, which artificially amplifies ambient air background scanner noise while oversaturating active tumor peripheral enhancing rings. Our architecture transforms standard RGB pixel tensors into CIE LAB space by mapping color coordinates via standard XYZ transformation equations:
@@ -211,7 +218,7 @@ We apply CLAHE exclusively upon this normalized luminance plane ($L^*$) while pr
 \begin{equation}
 \beta = \frac{M \times N}{L} \left( 1 + \frac{\alpha}{100}(s_{\max} - 1) \right)
 \end{equation}
-This targeted procedure sharpens capillary tumor infiltration margins and central necrotic core cavities without causing artificial color shifts or amplifying background electronic artifacts.
+This targeted procedure (Fig.~\ref{fig:clahe_comparison}) sharpens capillary tumor infiltration margins and central necrotic core cavities without causing artificial color shifts or amplifying background electronic artifacts.
 
 \textbf{Why Bicubic Polynomial Resampling Over Bilinear or Nearest-Neighbor Sampling?} Nearest-neighbor downsampling clones adjacent spatial pixel coordinates, introducing sharp artificial step-edge block artifacts along curved tumor boundaries that trigger false-positive alerts in early edge detector layers. Bilinear interpolation computes standard $2\times 2$ linear neighborhood averages, which smoothes subtle high-frequency capillary density gradients along infiltrating glioma borders. Bicubic interpolation resolves this by generating continuous third-order polynomial splines across $4\times 4$ local pixel grids using the evaluation kernel:
 \begin{equation}
@@ -314,7 +321,14 @@ where projection weight matrix $\mathbf{W}_1 \in \mathbb{R}^{64 \times 512 \time
 \subsection{Novelty 2: Monte Carlo Bayesian Predictive Uncertainty Engine}
 \textit{Clinical Safety Motivation:} An operationally trustworthy surgical diagnostic AI co-pilot must explicitly quantify and communicate systemic diagnostic uncertainty. Traditional deterministic softmax operations obscure neural parameter variations, exhibiting high diagnostic confidence ($\ge 95\%$) on degraded or ambiguous scan acquisitions.
 
-\textit{Mathematical Algorithm Formulation:} Grounded in foundational variational inference proofs by Gal and Ghahramani \cite{ref15}, applying Bernoulli dropout connections during testing evaluation functions as a mathematically tractable approximation of deep Gaussian process inference. Rather than executing standard deterministic inference (the default operational state in PyTorch \texttt{model.eval()}), our diagnostic evaluation framework keeps dropout layers active ($p=0.40$) during test time across $M=10$ stochastic evaluation forward passes per scan. For any diagnostic target class $i$ across evaluation iteration $m$, the predictive probability mean ($\bar{y}_i$) and epistemic uncertainty variance ($\sigma_i^2$) are calculated as:
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/graph_10_var.png}
+\caption{\textbf{Bayesian Predictive Uncertainty Spectrum.} Empirical epistemic diagnostic uncertainty spectrum evaluations ($\sigma^2$) generated across $M=10$ stochastic evaluation forward iterations, automatically flagging out-of-distribution or ambiguous scans.}
+\label{fig:mc_variance}
+\end{figure}
+
+\textit{Mathematical Algorithm Formulation:} Grounded in foundational variational inference proofs by Gal and Ghahramani \cite{ref15}, applying Bernoulli dropout connections during testing evaluation functions as a mathematically tractable approximation of deep Gaussian process inference. Rather than executing standard deterministic inference (the default operational state in PyTorch \texttt{model.eval()}), our diagnostic evaluation framework keeps dropout layers active ($p=0.40$) during test time across $M=10$ stochastic evaluation forward passes per scan (Fig.~\ref{fig:mc_variance}). For any diagnostic target class $i$ across evaluation iteration $m$, the predictive probability mean ($\bar{y}_i$) and epistemic uncertainty variance ($\sigma_i^2$) are calculated as:
 \begin{equation}
 \bar{y}_i = \frac{1}{M} \sum_{m=1}^{M} \hat{y}_i^{(m)}, \quad \sigma_i^2 = \frac{1}{M} \sum_{m=1}^{M} \left( \hat{y}_i^{(m)} - \bar{y}_i \right)^2
 \end{equation}
@@ -341,22 +355,19 @@ L_{\text{Grad-CAM}}^c = \text{ReLU} \left( \sum_{k=1}^{512} \alpha_k^c A^k \righ
 
 \textbf{Step 4 (Upsampling \& Alpha Overlay):} Interpolate the resulting $7\times 7$ feature matrix up to standard $224\times 224$ px dimensions via bilinear interpolation, apply a Jet color transformation, and alpha-blend directly over the patient's native anatomical slice at opacity $\alpha = 0.45$.
 
-\begin{figure*}[t!]
+\begin{figure}[t!]
 \centering
-\begin{minipage}{0.48\textwidth}
-\centering
-\includegraphics[width=0.96\linewidth]{figures/sample_gradcam.png}
+\includegraphics[width=0.95\linewidth]{figures/sample_gradcam.png}
 \caption{\textbf{Anatomical Lesion Localization.} Empirical Grad-CAM lesion verification heatmaps confirming precise anatomical localization along active Glioma enhancing margins and correct low-level diffuse signaling on No Tumor controls.}
 \label{fig:gradcam_sample}
-\end{minipage}
-\hfill
-\begin{minipage}{0.48\textwidth}
+\end{figure}
+
+\begin{figure}[t!]
 \centering
-\includegraphics[width=0.96\linewidth]{figures/attention_ratio.png}
+\includegraphics[width=0.95\linewidth]{figures/attention_ratio.png}
 \caption{\textbf{Quantitative Saliency Verification.} Empirical evaluation of the Attention Saliency Ratio ($\text{ASR} = 94.1\%$), confirming diagnostic classification focus within intracranial boundaries.}
 \label{fig:asr}
-\end{minipage}
-\end{figure*}
+\end{figure}
 
 As demonstrated in Fig.~\ref{fig:gradcam_sample}, across malignant Glioma studies, Grad-CAM attention aligns along active hypervascular ring-enhancing margins encircling central necrotic core cavities, whereas healthy No Tumor scans display low-level diffuse signaling confirming zero focal lesions.
 
@@ -377,17 +388,34 @@ To operationalize our XAI capabilities for real-world clinical environments, we 
 
 \begin{figure*}[t!]
 \centering
-\begin{tabular}{ccc}
-\includegraphics[width=0.31\textwidth]{figures/graph_1_cam.png} &
-\includegraphics[width=0.31\textwidth]{figures/graph_2_clahe.png} &
-\includegraphics[width=0.31\textwidth]{figures/graph_3_radar.png} \\
-(a) View 01: Macro Grad-CAM Lesion Heatmap & (b) View 02: Adaptive CLAHE L-Channel MRI & (c) View 03: Bayesian 4-Class Probability Radar \\[2mm]
-\includegraphics[width=0.31\textwidth]{figures/graph_7_3d.png} &
-\includegraphics[width=0.31\textwidth]{figures/graph_9_guided.png} &
-\includegraphics[width=0.31\textwidth]{figures/graph_10_var.png} \\
-(d) View 07: 3D Topographical Elevation Map & (e) View 09: Sub-Pixel Guided Tracing & (f) View 10: Monte Carlo Epistemic Variance Spectrum \\
-\end{tabular}
-\caption{\textbf{NeuroVision Production Radiomics Web Dashboard.} Symmetrically aligned interactive diagnostic screens from our real-time 17-View Radiomics Web Suite deployed over public HTTPS Port 443 tunneling via Pinggy, providing instant multi-modal evaluation, 3D surgical trajectory visualization, and Bayesian clinical uncertainty alerting.}
+\begin{minipage}[b]{0.46\textwidth}
+\centering
+\includegraphics[width=0.92\linewidth, height=6.0cm, keepaspectratio]{figures/graph_1_cam.png}
+\vspace{1mm}
+\centerline{\small (a) View 01: Macro Grad-CAM Lesion Heatmap}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{0.46\textwidth}
+\centering
+\includegraphics[width=0.92\linewidth, height=6.0cm, keepaspectratio]{figures/graph_9_guided.png}
+\vspace{1mm}
+\centerline{\small (b) View 09: Sub-Pixel Guided Tracing}
+\end{minipage}
+\\[4mm]
+\begin{minipage}[b]{0.46\textwidth}
+\centering
+\includegraphics[width=0.92\linewidth, height=6.0cm, keepaspectratio]{figures/graph_7_3d.png}
+\vspace{1mm}
+\centerline{\small (c) View 07: 3D Topographical Elevation Map}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{0.46\textwidth}
+\centering
+\includegraphics[width=0.92\linewidth, height=6.0cm, keepaspectratio]{figures/graph_3_radar.png}
+\vspace{1mm}
+\centerline{\small (d) View 03: Bayesian 4-Class Probability Radar}
+\end{minipage}
+\caption{\textbf{NeuroVision Production Radiomics Web Dashboard Grid.} Perfectly proportioned interactive diagnostic screens from our real-time 17-View Radiomics Web Suite deployed over public HTTPS Port 443 tunneling via Pinggy, displaying macroscopic lesion heatmaps, sub-pixel capillary tracing, 3D surgical trajectory elevation meshes, and Bayesian probability distributions.}
 \label{fig:dashboard_views}
 \end{figure*}
 
@@ -415,22 +443,19 @@ Our production diagnostic suite provides 17 independent analytical visualization
 \section{Experimental Results \& Deep Error Diagnosis}
 All computational experiments, architectural ablations, and test-time evaluation workloads were conducted on high-performance CUDA computing workstations utilizing NVIDIA GPU acceleration, Python 3.13, PyTorch 2.5.1, and TorchVision 0.20.1. Model optimization employed AdamW with decoupled L2 weight decay ($\lambda = 1.0 \times 10^{-4}$) and Cosine Annealing Warm Restarts ($T_0=10, T_{\text{mult}}=2$), utilizing periodic learning rate surges to escape suboptimal error loss minima during backpropagation.
 
-\begin{figure*}[t!]
+\begin{figure}[t!]
 \centering
-\begin{minipage}{0.48\textwidth}
-\centering
-\includegraphics[width=0.96\linewidth]{figures/training_curves.png}
+\includegraphics[width=0.95\linewidth]{figures/training_curves.png}
 \caption{\textbf{Optimization Convergence Metrics.} Parallel training versus validation accuracy progression across 38 epochs, demonstrating stable learning without overfitting.}
 \label{fig:train_curves}
-\end{minipage}
-\hfill
-\begin{minipage}{0.48\textwidth}
+\end{figure}
+
+\begin{figure}[t!]
 \centering
-\includegraphics[width=0.96\linewidth]{figures/loss_curve.png}
+\includegraphics[width=0.95\linewidth]{figures/loss_curve.png}
 \caption{\textbf{Loss Minimization Trajectory.} Weighted Cross-Entropy loss reduction trajectory illustrating periodic Cosine Annealing learning rate adjustments.}
 \label{fig:loss_curve}
-\end{minipage}
-\end{figure*}
+\end{figure}
 
 As documented in Figs.~\ref{fig:train_curves} and \ref{fig:loss_curve}, validation accuracy steadily advanced alongside training accuracy without displaying generalization divergence. Early stopping terminated training at epoch 38, preserving model weights at an optimal generalizable accuracy plateau of 97.84\%.
 
@@ -456,25 +481,22 @@ Pituitary ($n=74$)     & 99.10\% & 98.65\% & 98.87\% & 0.9968 & 1 FN / 1 FP \\
 
 Across 394 unseen test studies, our framework achieved peerless diagnostic reliability (Table~\ref{tab:test_results}). Notably, the under-represented No Tumor healthy baseline attained a 99.05\% recall rate with only a single false-negative error, proving that inverse-frequency gradient loss scaling successfully stabilized optimization across the unbalanced dataset without requiring synthetic image oversampling.
 
-\begin{figure*}[t!]
+\begin{figure}[t!]
 \centering
-\begin{minipage}{0.48\textwidth}
-\centering
-\includegraphics[width=0.92\linewidth]{figures/confusion_matrix.png}
+\includegraphics[width=0.94\linewidth]{figures/confusion_matrix.png}
 \caption{\textbf{Empirical Classification Accuracy.} Normalized 4-class test confusion matrix demonstrating high diagonal classification accuracy and reliable minority class detection.}
 \label{fig:cm}
-\end{minipage}
-\hfill
-\begin{minipage}{0.48\textwidth}
+\end{figure}
+
+\begin{figure}[t!]
 \centering
-\includegraphics[width=0.92\linewidth]{figures/roc_curve.png}
+\includegraphics[width=0.94\linewidth]{figures/roc_curve.png}
 \caption{\textbf{Receiver Operating Characteristic Analysis.} Multi-class One-vs-Rest ROC diagnostic separation curves confirming reliable diagnostic discrimination ($\text{mean AUC} = 0.9955$).}
 \label{fig:roc}
-\end{minipage}
-\end{figure*}
+\end{figure}
 
 \subsection{Deep Error Triage \& Bayesian Interception Verification}
-An exhaustive clinical triage audit of all 9 testing misclassifications revealed important insights into complex diagnostic boundaries:
+An exhaustive clinical triage audit of all 9 testing misclassifications revealed important insights into complex diagnostic boundaries (Figs.~\ref{fig:cm} and \ref{fig:roc}):
 \begin{itemize}
 \item \textbf{Glioma vs Meningioma Boundary Mimicry (5 instances):} Atypical Grade II meningiomas with extensive intratumoral calcifications and surrounding vasogenic edema visually resembled malignant gliomas. On deterministic classifiers, these errors passed undetected with $>94\%$ confidence. In our architecture, \textbf{4 of these 5 atypical studies triggered Bayesian MC uncertainty alerts ($\max(\sigma^2) > 0.05$)}, suspending automated reporting prior to physician display.
 \item \textbf{Pituitary Adenoma vs No Tumor (1 instance):} A sub-3mm intrasellar microadenoma situated within an unenlarged pituitary stalk was misclassified as healthy tissue due to coarse slice thickness and volume averaging artifacts.
