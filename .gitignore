@@ -1,0 +1,40 @@
+# Security & Secret Files
+test_gh_push.py
+*.token
+*.key
+.env
+
+# Research Paper Build Artifacts (Per user request: focus on project & README)
+Results/1_Research_Paper/
+*.pdf
+*.log
+*.aux
+*.out
+
+# Large Binaries & Datasets
+*.pth
+*.h5
+*.ckpt
+*.zip
+*.tar
+*.gz
+data/
+dataset/
+
+# Python Virtual Environments & Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE & OS specific files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
