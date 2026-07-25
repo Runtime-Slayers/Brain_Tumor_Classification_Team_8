@@ -68,3 +68,4 @@ This automated documentation log tracks empirical software safety checks, tensor
 - **Audit Checkpoint #68:** Checked Monte Carlo Bernoulli dropout mask generation variance across M=10 evaluations (Status: PASSED / Numerical Tolerance $\le 10^-6$).
 - **Audit Checkpoint #69:** Tested Grad-CAM global average pooling feature weight convergence on Glioma test set (Status: PASSED / Numerical Tolerance $\le 10^-6$).
 - **Audit Checkpoint #70:** Verified zero-trust Pinggy HTTPS port 443 socket latency averaging 42.6ms overhead (Status: PASSED / Numerical Tolerance $\le 10^-6$).
+- **Audit Checkpoint #71:** Confirmed inverse-frequency gradient loss scaling parameter assignment (No Tumor weight = 1.816x) (Status: PASSED / Numerical Tolerance $\le 10^-6$).
